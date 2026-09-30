@@ -1,0 +1,23 @@
+services:
+  review-service:
+    build: .
+    image: double-blind-review:latest
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      # 会务方本地密钥：生产环境请在 .env 或环境中覆盖
+      ORGANIZER_KEY: "${ORGANIZER_KEY:-dev-organizer-key}"
+      DB_PATH: "/data/review.db"
+      SOLVER_NODE_BUDGET: "${SOLVER_NODE_BUDGET:-500000}"
+    volumes:
+      - review-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health').status==200 else 1)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  review-data:
